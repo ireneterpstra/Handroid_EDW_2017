@@ -15,6 +15,7 @@ Development environment specifics:
 Arduino 1.6.7
 ******************************************************************************/
 const int FLEX_PIN = A0; // Pin connected to voltage divider output
+const int ledPin = 3;   //pin 3 has PWM funtion
 
 // Measure the voltage at 5V and the actual resistance of your
 // 47k resistor, and enter them below:
@@ -25,6 +26,10 @@ const float R_DIV = 47500.0; // Measured resistance of 3.3k resistor
 // accurately calculate bend degree.
 const float STRAIGHT_RESISTANCE = 37300.0; // resistance when straight
 const float BEND_RESISTANCE = 90000.0; // resistance at 90 deg
+int minBend = -20;
+int maxBend = 95;
+
+int value; //save analog value
 
 void setup() 
 {
@@ -38,14 +43,16 @@ void loop()
   int flexADC = analogRead(FLEX_PIN);
   float flexV = flexADC * VCC / 1023.0;
   float flexR = R_DIV * (VCC / flexV - 1.0);
-  Serial.println("Resistance: " + String(flexR) + " ohms");
+  Serial.print("Resistance: " + String(flexR) + " ohms\t");
 
   // Use the calculated resistance to estimate the sensor's
   // bend angle:
-  float angle = map(flexR, STRAIGHT_RESISTANCE, BEND_RESISTANCE,
-                   0, 90.0);
-  Serial.println("Bend: " + String(angle) + " degrees");
+  float angle = map(flexR, STRAIGHT_RESISTANCE, BEND_RESISTANCE, 0, 90.0);
+  Serial.print("Bend: " + String(angle) + " degrees");
   Serial.println();
+  
+  value = map(angle, minBend, maxBend, 0, 255);//Map value 0-1023 to 0-255 (PWM)
+  analogWrite(ledPin, value);          //Send PWM value to led
 
   delay(500);
 }
