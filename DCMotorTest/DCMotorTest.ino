@@ -3,7 +3,7 @@ Adafruit Arduino - Lesson 13. DC Motor
 */
  
  
-int motorPin = 3;
+int motorPin = 9;
  
 void setup() 
 { 
