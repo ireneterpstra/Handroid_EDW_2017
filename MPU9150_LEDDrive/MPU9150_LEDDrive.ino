@@ -3,42 +3,51 @@
 #include <MCP4725.h>
 #include <Wire.h>
 #include <GtHeartBeat.h>
-// class default I2C address is 0x68
-// specific I2C addresses may be passed as a parameter here
-// AD0 low = 0x68 (default for SparkFun breakout and InvenSense evaluation board)
-// AD0 high = 0x69
-//MPU6050 mpu;
-//MPU6050 mpu(0x69); // <-- use for AD0 high
-//#define ON_ROBOT
 #ifdef ON_ROBOT
   GtGiro giro(0x69, 2000, 30);
-  //GtGiro giro(0x69, 1000); //fifo-reset every 1 sec
 #else
-  //GtGiro giro(0x68);
   GtGiro giro(0x68, 2000, 30);
 #endif
 MCP4725 dac;
-//GtHeartBeat heartBeat(13, 1000, 10);//on-board LED on port 13, 10 ms every 2 sec
+
+int ledFR1 = 9;
+int ledFR0 = 5;
+int ledFL1 = 6;
+int ledFL0 = 3;
+int ledBL1 = 11;
+int ledBL0 = 13;
+int ledBR1 = 12;
+int ledBR0 = 10;
+
+int x = 0;
+int y = 0;
+int s = 0;
+
 void setup() {
-  
   // initialize serial communication
-    Serial.begin(9600);
-    Serial.println("Setup");
-    
-    #ifdef ON_ROBOT
-      dac.begin(0x60);
-    #endif
-    
-    giro.setup();
-    
-    //pinMode(13, OUTPUT);
-//    heartBeat.setup();
+  Serial.begin(9600);
+  Serial.println("Setup");
+  
+  #ifdef ON_ROBOT
+    dac.begin(0x60);
+  #endif
+  
+  giro.setup();
+
+  pinMode(ledFR1, OUTPUT);
+  pinMode(ledFR0, OUTPUT);
+  pinMode(ledFL1, OUTPUT);
+  pinMode(ledFL0, OUTPUT);
+  pinMode(ledBL1, OUTPUT);
+  pinMode(ledBL0, OUTPUT);
+  pinMode(ledBR1, OUTPUT);
+  pinMode(ledBR0, OUTPUT);
+
 }
 long lastPrintMillis = 0;
 void giroLoopCallPrint(){
   if (giro.readGiroLoopCall()){
     #ifdef ON_ROBOT
-      //dac.setVoltage(giro.getAdjustedYawAsDacValue(0, 4095), false);
       dac.setVoltage(giro.getAdjustedHysteresisYawAsDacValue(0, 4095), false);
     #endif
     
@@ -55,18 +64,42 @@ void giroLoopCallPrint(){
      }
   }
 }
-//void giroLoopCallDac(){
-//  //Note that readGiroLoopCall will only actually read the giro each 50 ms, otherwise returns quickly
-//  if (giro.readGiroLoopCall()){
-//    //Need to convert -180 to 180 to 0 to 4095:
-//    dac.setVoltage(giro.getAdjustedYawAsDacValue(0, 4095), false);
-//  }
-//}
+
+void setX(int roll){
+  if (roll >= 15){
+    x = ((roll - 15) / 30); // x => [0,1]
+  } else if (roll <= -15){
+    x = ((roll + 15) / 30); // x => [-1,0]
+  }
+}
+void setY(int pitch){
+  if (pitch >= 15){
+    y = ((pitch - 15) / 30); // y => [0,1]
+  } else if (pitch <= -15){
+    y = ((pitch + 15) / 30); // y => [-1,0]
+  }
+}
+void setS(int spin){
+  if (spin >= 15){
+    y = ((spin-15)/30); // y => [0,1]
+  } else if (spin <= -15){
+    y = ((spin+15)/30); // y => [-1,0]
+  }
+}
 int i = 0;
 void loop() {
   giroLoopCallPrint();
-  //heartbeatLoopCall();
-//  heartBeat.heartbeatLoopCall();
+
+  setX(giro.getRoll());
+  setY(giro.getPitch());
+  
+  motorFLPower = x + y - s;
+  motorBLPower = -x + y - s;
+  motorFRPower = x - y - s;
+  motorBRPower = -x - y - s;
+
+
+  
   delay(20);
   
 //  i++;
