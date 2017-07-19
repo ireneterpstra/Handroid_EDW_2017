@@ -1,14 +1,14 @@
-#define debug true
-#include <GtGiro.h>
-#include <MCP4725.h>
-#include <Wire.h>
-#include <GtHeartBeat.h>
-#ifdef ON_ROBOT
-  GtGiro giro(0x69, 2000, 30);
-#else
-  GtGiro giro(0x68, 2000, 30);
-#endif
-MCP4725 dac;
+//#define debug true
+//#include <GtGiro.h>
+//#include <MCP4725.h>
+//#include <Wire.h>
+//#include <GtHeartBeat.h>
+//#ifdef ON_ROBOT
+//  GtGiro giro(0x69, 2000, 30);
+//#else
+//  GtGiro giro(0x68, 2000, 30);
+//#endif
+//MCP4725 dac;
 
 int M1Pin1 = 2;    // H-bridge leg 1 (pin 2, 1A)
 int M1Pin0 = 3;    // H-bridge leg 1 (pin 2, 1A)
@@ -22,15 +22,15 @@ int y = 0;
 int s = 0;
 
 void setup() {
-  // initialize serial communication
-  Serial.begin(9600);
-  Serial.println("Setup");
-  
-  #ifdef ON_ROBOT
-    dac.begin(0x60);
-  #endif
-  
-  giro.setup();
+//  // initialize serial communication
+//  Serial.begin(9600);
+//  Serial.println("Setup");
+//  
+//  #ifdef ON_ROBOT
+//    dac.begin(0x60);
+//  #endif
+//  
+//  giro.setup();
   
   pinMode(M1Pin1, OUTPUT);
   pinMode(M1Pin0, OUTPUT);    
@@ -40,26 +40,26 @@ void setup() {
   pinMode(enablePinM2, OUTPUT);
  
 }
-long lastPrintMillis = 0;
-void giroLoopCallPrint(){
-  if (giro.readGiroLoopCall()){
-    #ifdef ON_ROBOT
-      dac.setVoltage(giro.getAdjustedHysteresisYawAsDacValue(0, 4095), false);
-    #endif
-    
-    long currentMillis = millis();
-    if (currentMillis - lastPrintMillis > 500){
-        lastPrintMillis = currentMillis;
-        Serial.print("Yaw\t");
-        Serial.print(giro.getYaw());
-        Serial.print("\tPitch\t");
-        Serial.print(giro.getPitch());
-        Serial.print("\tRoll\t");
-        Serial.print(giro.getRoll());
-        Serial.println();
-     }
-  }
-}
+//long lastPrintMillis = 0;
+//void giroLoopCallPrint(){
+//  if (giro.readGiroLoopCall()){
+//    #ifdef ON_ROBOT
+//      dac.setVoltage(giro.getAdjustedHysteresisYawAsDacValue(0, 4095), false);
+//    #endif
+//    
+//    long currentMillis = millis();
+//    if (currentMillis - lastPrintMillis > 500){
+//        lastPrintMillis = currentMillis;
+//        Serial.print("Yaw\t");
+//        Serial.print(giro.getYaw());
+//        Serial.print("\tPitch\t");
+//        Serial.print(giro.getPitch());
+//        Serial.print("\tRoll\t");
+//        Serial.print(giro.getRoll());
+//        Serial.println();
+//     }
+//  }
+//}
 
 void setX(int roll){
   if (roll >= 15){
@@ -83,41 +83,49 @@ void setS(int spin){
   }
 }
 
-void motorWrapper(int motor, int pin1, pin0, int motorPower){
+void motorWrapper(double motorPower, int motor, int pin1, int pin0){
   int power;
-  if (mororPower >= 0){
+  if (motorPower >= 0){
+    power = (motorPower) * 255;
+    analogWrite(motor, power);
     //direction = 1; (forward)
       digitalWrite(pin1, LOW);   // set leg 1 of the H-bridge low
-      digitalWrite(pni0, HIGH);  // set leg 2 of the H-bridge high
-    power = (mptorPower / 3) * 255;
-    analogWrite(motor, power);
+      digitalWrite(pin0, HIGH);  // set leg 2 of the H-bridge high
+    
   } else{
+    power = (-motorPower) * 255;
+    analogWrite(motor, power);
     //direction = 0; (backward)
       digitalWrite(pin1, HIGH);   // set leg 1 of the H-bridge low
       digitalWrite(pin0, LOW);  // set leg 2 of the H-bridge high
-    power = (-mptorPower / 3) * 255;
-    analogWrite(motor, power);
   }
 }
 
 void loop() {
-  LM = y + s;
-  RM = -y + s;
-
+//  LM = y + s;
+//  RM = -y + s;
 
   
-  analogWrite(enablePinM2, 200);
-  digitalWrite(M1Pin1, LOW);   // set leg 1 of the H-bridge low
-  digitalWrite(M1Pin0, HIGH);  // set leg 2 of the H-bridge high
-  analogWrite(enablePinM1, 200);
-  digitalWrite(M2Pin1, LOW);   // set leg 1 of the H-bridge low
-  digitalWrite(M2Pin0, HIGH);  // set leg 2 of the H-bridge high
+  motorWrapper(.75, enablePinM1, M1Pin1, M1Pin0);
+  motorWrapper(.75, enablePinM2, M2Pin1, M2Pin0);
   delay(1000);
-  digitalWrite(M1Pin1, HIGH);  // set leg 1 of the H-bridge high
-  digitalWrite(M1Pin0, LOW);   // set leg 2 of the H-bridge low
-  digitalWrite(M2Pin1, HIGH);   // set leg 1 of the H-bridge low
-  digitalWrite(M2Pin0, LOW);  // set leg 2 of the H-bridge high
+  motorWrapper(-.75, enablePinM1, M1Pin1, M1Pin0);
+  motorWrapper(-.75, enablePinM2, M2Pin1, M2Pin0);
   delay(1000);
+
+  
+//  analogWrite(enablePinM1, 200);
+//  digitalWrite(M1Pin1, LOW);   // set leg 1 of the H-bridge low
+//  digitalWrite(M1Pin0, HIGH);  // set leg 2 of the H-bridge high
+//  analogWrite(enablePinM2, 200);
+//  digitalWrite(M2Pin1, LOW);   // set leg 1 of the H-bridge low
+//  digitalWrite(M2Pin0, HIGH);  // set leg 2 of the H-bridge high
+//  delay(1000);
+//  digitalWrite(M1Pin1, HIGH);  // set leg 1 of the H-bridge high
+//  digitalWrite(M1Pin0, LOW);   // set leg 2 of the H-bridge low
+//  digitalWrite(M2Pin1, HIGH);   // set leg 1 of the H-bridge low
+//  digitalWrite(M2Pin0, LOW);  // set leg 2 of the H-bridge high
+//  delay(1000);
 
 }
 
