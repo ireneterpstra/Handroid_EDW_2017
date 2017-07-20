@@ -76,41 +76,52 @@ void displayCalStatus(void)
   Serial.print(mag, DEC);
 }
 
-/*  Convert yaw, pitch, and roll into [-1,1] r, p, and y values*/
-void setRoll(double roll){
-  if (roll >= 10){
-    r = ((roll - 10) / 90); // r => [0,1]
-  } else if (roll <= -10){
-    r = ((roll + 10) / 90); // r => [-1,0]
+/*  Convert yaw, pitch, and roll into [-100,100] r, p, and y values*/
+int convertToPower(double input){
+  int output = 0;
+  if (input <= 45 || input >= -45){
+    if (input >= 5){
+      output = map(input, 0, 45, 0, 50); // ((roll - 10) / 90); // o => [0,50]
+    } else if (input <= -5){
+      output = map(input, -45, 0, -50, 0); // ((roll + 10) / 90); // o => [-50,0]
+    }
+  } else {
+    if (input > 0){
+      output = 50;
+    } else {
+      output = -50;
+    }
   }
+  
+  return output;
 }
-void setPitch(double pitch){
-  if (pitch >= 10){
-    p = ((pitch - 10) / 90); // p => [0,1]
-  } else if (pitch <= -10){
-    p = ((pitch + 10) / 90); // p => [-1,0]
-  }
-}
-void setYaw(double yaw){
-  if (yaw >= 10){
-    y = ((yaw - 10) / 90); // y => [0,1]
-  } else if (yaw <= -10){
-    y = ((yaw + 10) / 90); // y => [-1,0]
-  }
-}
+//void setPitch(double pitch){
+//  if (pitch >= 5){
+//    p = map(pitch, 0, 180, 0, 50); // ((pitch - 10) / 90); // p => [0,50]
+//  } else if (pitch <= -5){
+//    p = map(pitch, -180, 0, -50, 0); // ((pitch + 10) / 90); // p => [-50,0]
+//  }
+//}
+//void setYaw(double yaw){
+//  if (yaw >= 5){
+//    y = map(yaw, 0, 180, 0, 50); // ((yaw - 10) / 90); // y => [0,1]
+//  } else if (yaw <= -5){
+//    y = map(yaw, -180, 0, -50, 0); // ((yaw + 10) / 90); // y => [-1,0]
+//  }
+//}
 
 /* Motpr power function*/
-void motorWrapper(double motorPower, int motor, int pin1, int pin0){
+void motorWrapper(int motorPower, int motor, int pin1, int pin0){
   int power;
   if (motorPower >= 0){
-    power = (motorPower / 2) * 255; //Divide motor power by range of expected input (in this case it is [-1,2])
+    power = map (motorPower, 0, 101, 50, 255); //(motorPower / 2) * 255; //Divide motor power by range of expected input (in this case it is [-100, 100])
     analogWrite(motor, power);
     //direction = 1; (forward)
       digitalWrite(pin1, LOW);
       digitalWrite(pin0, HIGH);
     
   } else{
-    power = (-motorPower) * 255; //Divide motor power by range of expected input (in this case it is [-1,2])
+    power =  map(-motorPower, 0, 101, 50, 255); //(-motorPower) * 255; //Divide motor power by range of expected input (in this case it is [-100, 100])
     analogWrite(motor, power);
     //direction = 0; (backward)
       digitalWrite(pin1, HIGH);
@@ -177,10 +188,9 @@ void loop(void) {
   /* New line for  next sample */
   Serial.println("");
 
-  setYaw(BX); 
-  setPitch(BY); 
-  setRoll(BZ); 
- 
+  y = convertToPower(BX);
+  p = convertToPower(BY);
+  r = convertToPower(BZ);
   
   int LM = p + y;
   int RM = p - y;
