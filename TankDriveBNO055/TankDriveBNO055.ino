@@ -1,3 +1,10 @@
+/*
+ * Irene Terpstra
+ * Team Handroid 
+ * 7/21/17 
+ * Code for 2-4 wheel tank drive with BNO055 + flex sensors 
+ */
+
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>

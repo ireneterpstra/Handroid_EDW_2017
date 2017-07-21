@@ -1,3 +1,9 @@
+/*
+ * Irene Terpstra
+ * Team Handroid 
+ * 7/21/17 
+ * Code for omni wheel drive with BNO055 + flex sensors 
+ */
 double mortorFLPower;
 double mortorBLPower;
 double mortorFRPower;
