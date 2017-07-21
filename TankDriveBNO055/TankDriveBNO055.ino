@@ -3,7 +3,16 @@
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
 
-
+const int FLEX_PIN1 = A0; // Pin connected to voltage divider output
+const int FLEX_PIN2 = A1; // Pin connected to voltage divider output
+// Measure the voltage at 5V and the actual resistance of your
+// 47k resistor, and enter them below:
+const float VCC = 4.98; // Measured voltage of Ardunio 5V line
+const float R_DIV = 47500.0; // Measured resistance of 3.3k resistor
+const float STRAIGHT_RESISTANCE = 37300.0; // resistance when straight
+const float BEND_RESISTANCE = 90000.0; // resistance at 90 deg
+int minBend = -20;
+int maxBend = 95;
 
 int M1Pin1 = 2;    // H-bridge leg 1 (pin 2, 1A)
 int M1Pin0 = 3;    // H-bridge leg 1 (pin 2, 1A)
@@ -19,6 +28,9 @@ double y = 0; // yaw / spin
 double BX;
 double BY;
 double BZ;
+
+int LM = 0;
+int RM = 0;
 
 int BNO055_SAMPLERATE_DELAY_MS = 100;
 
@@ -80,9 +92,9 @@ void displayCalStatus(void)
 int convertToPower(double input){
   int output = 0;
   if (input <= 45 || input >= -45){
-    if (input >= 5){
+    if (input >= 10){
       output = map(input, 0, 45, 0, 50); // ((roll - 10) / 90); // o => [0,50]
-    } else if (input <= -5){
+    } else if (input <= -10){
       output = map(input, -45, 0, -50, 0); // ((roll + 10) / 90); // o => [-50,0]
     }
   } else {
@@ -95,20 +107,6 @@ int convertToPower(double input){
   
   return output;
 }
-//void setPitch(double pitch){
-//  if (pitch >= 5){
-//    p = map(pitch, 0, 180, 0, 50); // ((pitch - 10) / 90); // p => [0,50]
-//  } else if (pitch <= -5){
-//    p = map(pitch, -180, 0, -50, 0); // ((pitch + 10) / 90); // p => [-50,0]
-//  }
-//}
-//void setYaw(double yaw){
-//  if (yaw >= 5){
-//    y = map(yaw, 0, 180, 0, 50); // ((yaw - 10) / 90); // y => [0,1]
-//  } else if (yaw <= -5){
-//    y = map(yaw, -180, 0, -50, 0); // ((yaw + 10) / 90); // y => [-1,0]
-//  }
-//}
 
 /* Motpr power function*/
 void motorWrapper(int motorPower, int motor, int pin1, int pin0){
@@ -148,6 +146,9 @@ void setup(void)
 
   bno.setExtCrystalUse(true);
 
+  pinMode(FLEX_PIN1, INPUT);
+  pinMode(FLEX_PIN2, INPUT);
+
   pinMode(M1Pin1, OUTPUT);
   pinMode(M1Pin0, OUTPUT);    
   pinMode(M2Pin1, OUTPUT);
@@ -169,14 +170,13 @@ void loop(void) {
   BZ = event.orientation.z;
   BY = event.orientation.y;
   
-  
   /* Display the floating point data */
-  Serial.print("X: ");
-  Serial.print(event.orientation.x, 4); // yaw / spin [0,360]
-  Serial.print("\tY: ");
-  Serial.print(event.orientation.y, 4); // pitch [-180,180]
-  Serial.print("\tZ: ");
-  Serial.print(event.orientation.z, 4); // roll [-180,180]
+//  Serial.print("X: ");
+//  Serial.print(event.orientation.x, 4); // yaw / spin [0,360]
+//  Serial.print("\tY: ");
+//  Serial.print(event.orientation.y, 4); // pitch [-180,180]
+//  Serial.print("\tZ: ");
+//  Serial.print(event.orientation.z, 4); // roll [-180,180]
 
   Serial.print("\tYaw: ");
   Serial.print(BX, 4); // yaw / spin [0,360]
@@ -185,15 +185,39 @@ void loop(void) {
   Serial.print("\tRoll: ");
   Serial.print(BZ, 4); // roll [-180,180]
   displayCalStatus();
+
+  int flexADC1 = analogRead(FLEX_PIN1);
+  float flexV1 = flexADC1 * VCC / 1023.0;
+  float flexR1 = R_DIV * (VCC / flexV1 - 1.0);
+  //Serial.print("\tResistance 1: " + String(flexR1) + " ohms\t");
+
+  // Use the calculated resistance to estimate the sensor's bend angle:
+  float angle1 = map(flexR1, STRAIGHT_RESISTANCE, BEND_RESISTANCE, 0, 90.0);
+  Serial.print("\tBend 1: " + String(angle1) + " degrees");
+
+  int flexADC2 = analogRead(FLEX_PIN2);
+  float flexV2 = flexADC2 * VCC / 1023.0;
+  float flexR2 = R_DIV * (VCC / flexV2 - 1.0);
+  //Serial.print("Resistance 2: " + String(flexR2) + " ohms\t");
+
+  // Use the calculated resistance to estimate the sensor's bend angle:
+  float angle2 = map(flexR2, STRAIGHT_RESISTANCE, BEND_RESISTANCE, 0, 90.0);
+  Serial.print("\tBend 2: " + String(angle2) + " degrees");
+  
   /* New line for  next sample */
   Serial.println("");
 
   y = convertToPower(BX);
   p = convertToPower(BY);
   r = convertToPower(BZ);
-  
-  int LM = p + y;
-  int RM = p - y;
+
+  if (angle1 <= 50){
+    LM = p + y;
+    RM = p - y;
+  } else {
+    LM = 0;
+    RM = 0;
+  }
   
   motorWrapper(LM, enablePinM1, M1Pin1, M1Pin0);
   motorWrapper(RM, enablePinM2, M2Pin1, M2Pin0);
