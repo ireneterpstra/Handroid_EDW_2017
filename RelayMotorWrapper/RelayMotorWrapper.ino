@@ -56,6 +56,7 @@ void motorWrapper(int motorPower, int motor, int pin1, int pin0){
     analogWrite(motor, power);
     //direction = forward
       digitalWrite(pin1, LOW);
+      delay (1);
       digitalWrite(pin0, HIGH);
     
   } else{
@@ -63,6 +64,7 @@ void motorWrapper(int motorPower, int motor, int pin1, int pin0){
     analogWrite(motor, power);
     //direction = backward
       digitalWrite(pin1, HIGH);
+      delay (1);
       digitalWrite(pin0, LOW);
   }
 }
