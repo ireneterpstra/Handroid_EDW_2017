@@ -13,6 +13,8 @@ const float STRAIGHT_RESISTANCE = 37300.0; // resistance when straight
 const float BEND_RESISTANCE = 90000.0; // resistance at 90 deg
 int minBend = -20;
 int maxBend = 95;
+float angle1 = 0;
+float angle2 = 0;
 
 int M1Pin1 = 2;    // H-bridge leg 1 (pin 2, 1A)
 int M1Pin0 = 3;    // H-bridge leg 1 (pin 2, 1A)
@@ -88,13 +90,13 @@ void displayCalStatus(void)
   Serial.print(mag, DEC);
 }
 
-/*  Convert yaw, pitch, and roll into [-100,100] r, p, and y values*/
+/*  Convert yaw, pitch, and roll into [-100,100] power values*/
 int convertToPower(double input){
   int output = 0;
   if (input <= 45 || input >= -45){
-    if (input >= 10){
+    if (input >= 7){
       output = map(input, 0, 45, 0, 50); // ((roll - 10) / 90); // o => [0,50]
-    } else if (input <= -10){
+    } else if (input <= -7){
       output = map(input, -45, 0, -50, 0); // ((roll + 10) / 90); // o => [-50,0]
     }
   } else {
@@ -103,6 +105,17 @@ int convertToPower(double input){
     } else {
       output = -50;
     }
+  }
+  
+  return output;
+}
+
+int convertFlexPower(double input){
+  int output = 0;
+  if (input <= 90 && input >= 10){
+    output = map(input, 5, 90, 0, 50); // ((roll - 10) / 90); // o => [0,50]
+  } else if (input > 90){
+    output = 50;
   }
   
   return output;
@@ -125,6 +138,16 @@ void motorWrapper(int motorPower, int motor, int pin1, int pin0){
       digitalWrite(pin1, HIGH);
       digitalWrite(pin0, LOW);
   }
+}
+
+float calculateResistance(int pinout){
+  float angle = 0;
+  int flexADC = analogRead(pinout);
+  float flexV = flexADC * VCC / 1023.0;
+  float flexR = R_DIV * (VCC / flexV - 1.0);
+  // Use the calculated resistance to estimate the sensor's bend angle:
+  angle = map(flexR, STRAIGHT_RESISTANCE, BEND_RESISTANCE, 0, 90.0);
+  return angle;
 }
 
 void setup(void)
@@ -170,50 +193,20 @@ void loop(void) {
   BZ = event.orientation.z;
   BY = event.orientation.y;
   
-  /* Display the floating point data */
-//  Serial.print("X: ");
-//  Serial.print(event.orientation.x, 4); // yaw / spin [0,360]
-//  Serial.print("\tY: ");
-//  Serial.print(event.orientation.y, 4); // pitch [-180,180]
-//  Serial.print("\tZ: ");
-//  Serial.print(event.orientation.z, 4); // roll [-180,180]
-
-  Serial.print("\tYaw: ");
-  Serial.print(BX, 4); // yaw / spin [0,360]
-  Serial.print("\tPitch: ");
-  Serial.print(BZ, 4); // pitch [-180,180]
-  Serial.print("\tRoll: ");
-  Serial.print(BY, 4); // roll [-180,180]
-  displayCalStatus();
-
-  int flexADC1 = analogRead(FLEX_PIN1);
-  float flexV1 = flexADC1 * VCC / 1023.0;
-  float flexR1 = R_DIV * (VCC / flexV1 - 1.0);
-  //Serial.print("\tResistance 1: " + String(flexR1) + " ohms\t");
-
-  // Use the calculated resistance to estimate the sensor's bend angle:
-  float angle1 = map(flexR1, STRAIGHT_RESISTANCE, BEND_RESISTANCE, 0, 90.0);
-  Serial.print("\tBend 1: " + String(angle1) + " degrees");
-
-  int flexADC2 = analogRead(FLEX_PIN2);
-  float flexV2 = flexADC2 * VCC / 1023.0;
-  float flexR2 = R_DIV * (VCC / flexV2 - 1.0);
-  //Serial.print("Resistance 2: " + String(flexR2) + " ohms\t");
-
-  // Use the calculated resistance to estimate the sensor's bend angle:
-  float angle2 = map(flexR2, STRAIGHT_RESISTANCE, BEND_RESISTANCE, 0, 90.0);
-  Serial.print("\tBend 2: " + String(angle2) + " degrees");
-  
-  /* New line for  next sample */
-  Serial.println("");
+  angle1 = calculateResistance(FLEX_PIN1);
+  angle2 = calculateResistance(FLEX_PIN2);
 
   y = convertToPower(BX);
   p = convertToPower(BZ);
   r = convertToPower(BY);
+  int accel = convertFlexPower(angle2);
+  if (p < 0){
+    accel = -accel;
+  }
 
   if (angle1 <= 50){
-    LM = p + y;
-    RM = p - y;
+    LM = accel + y;
+    RM = accel - y;
   } else {
     LM = 0;
     RM = 0;
@@ -223,6 +216,33 @@ void loop(void) {
   motorWrapper(RM, enablePinM2, M2Pin1, M2Pin0);
   //delay(1000);
 
+
+  /* Display the floating point data */
+//  Serial.print("X: ");
+//  Serial.print(event.orientation.x, 4); // yaw / spin [0,360]
+//  Serial.print("\tY: ");
+//  Serial.print(event.orientation.y, 4); // pitch [-180,180]
+//  Serial.print("\tZ: ");
+//  Serial.print(event.orientation.z, 4); // roll [-180,180]
+
+  Serial.print("Yaw: ");
+  Serial.print(BX, 4); // yaw / spin [0,360]
+  Serial.print("\tPitch: ");
+  Serial.print(BZ, 4); // pitch [-180,180]
+  Serial.print("\tRoll: ");
+  Serial.print(BY, 4); // roll [-180,180]
+  displayCalStatus();
+  //Serial.print("\tResistance 1: " + String(flexR1) + " ohms\t");
+  Serial.print("\tBend 1: " + String(angle1));
+  //Serial.print("Resistance 2: " + String(flexR2) + " ohms\t");
+  Serial.print("\tBend 2: " + String(angle2));
+  
+  Serial.print("\tLM: " + String(LM));
+  Serial.print("\tRM: " + String(RM));
+  
+  /* New line for  next sample */
+  Serial.println("");
+  
   /* Wait the specified delay before requesting nex data */
   delay(BNO055_SAMPLERATE_DELAY_MS);
 }
