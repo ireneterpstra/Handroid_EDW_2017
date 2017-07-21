@@ -11,11 +11,11 @@ int M1min = 4;
 int M2plus = 5;
 int M2min = 6;
 //int M3power = ;
-int M3plus = 3;
-int M3min = 4;
-//int M3power = ;
-int M3plus = 5;
-int M3min = 6;
+int M3plus = 7;
+int M3min = 8;
+//int M4power = ;
+int M4plus = 9;
+int M4min = 10;
 
 /*          \|/   \|/
   *          ________
@@ -29,68 +29,45 @@ int M3min = 6;
   * 
 */
 
-void setup() {//Setup runs once
-  pinMode(Motor1Forward, OUTPUT); //Sets forwards as output
-  pinMode(Motor1Backwards, OUTPUT); //Sets backwards as output
-  pinMode(Motor2Forward, OUTPUT); //Sets forwards as output
-  pinMode(Motor2Backwards, OUTPUT); //Sets backwards as output
+void setup() {
+  //set outputs
+  pinMode(M1power, OUTPUT);
+  pinMode(M1plus, OUTPUT);
+  pinMode(M1min, OUTPUT);
+  
+  pinMode(M2power, OUTPUT);
+  pinMode(M2plus, OUTPUT);
+  pinMode(M2min, OUTPUT);
+  
+  pinMode(M3power, OUTPUT);
+  pinMode(M3plus, OUTPUT);
+  pinMode(M3min, OUTPUT);
+  
+  pinMode(M4power, OUTPUT);
+  pinMode(M4plus, OUTPUT);
+  pinMode(M4min, OUTPUT);
 }
 
-void MoveForward () {
-  digitalWrite(Motor1Backwards, LOW);
-  digitalWrite(Motor2Backwards, LOW);
-  // 1 millisecond 
-  delay (1);
-  digitalWrite(Motor1Forward, HIGH);
-  digitalWrite(Motor2Forward, HIGH);
-}
-
-void MoveBackwards () {
-  digitalWrite(Motor1Forward, LOW);
-  digitalWrite(Motor2Forward, LOW);
-  // 1 millisecond 
-  delay(1);
-  digitalWrite(Motor1Backwards, HIGH);
-  digitalWrite(Motor2Backwards, HIGH);
-}
-
-void TurnLeft () {
-  digitalWrite(Motor1Forward, LOW);
-  digitalWrite(Motor2Backwards, LOW);
-  // 1 millisecond 
-  delay(1);
-  digitalWrite(Motor1Backwards, HIGH);
-  digitalWrite(Motor2Forward, HIGH);  
-}
-
-void TurnRight () {
-  digitalWrite(Motor1Backwards, LOW);
-  digitalWrite(Motor2Forward, LOW);
-  // 1 millisecond 
-  delay (1);
-  digitalWrite(Motor1Forward, HIGH);
-  digitalWrite(Motor2Backwards, HIGH);
-}
-
-void Stop () {
-  digitalWrite(Motor1Backwards, LOW);
-  digitalWrite(Motor2Forward, LOW);
-  digitalWrite(Motor1Forward, LOW);
-  digitalWrite(Motor2Backwards, LOW);
-  // 1 millisecond 
-  delay (1);
+/* Motpr power function*/
+void motorWrapper(int motorPower, int motor, int pin1, int pin0){
+  int power;
+  if (motorPower >= 0){
+    power = map (motorPower, 0, 101, 50, 255); //Map inputed power range to 0-255 power output (in this case the range is [-100, 100])
+    analogWrite(motor, power);
+    //direction = forward
+      digitalWrite(pin1, LOW);
+      digitalWrite(pin0, HIGH);
+    
+  } else{
+    power =  map(-motorPower, 0, 101, 50, 255); //Map inputed power range to 0-255 power output (in this case the range is [-100, 100])
+    analogWrite(motor, power);
+    //direction = backward
+      digitalWrite(pin1, HIGH);
+      digitalWrite(pin0, LOW);
+  }
 }
 
 
-void loop() { //Loop runs forever//
-  MoveForward();
-  delay(2000);
-  MoveBackwards();
-  delay(2000);
-  TurnRight();
-  delay(2000);
-  TurnLeft();
-  delay(2000);
-  Stop();
-  delay(2000);
+void loop() {
+  
 }
