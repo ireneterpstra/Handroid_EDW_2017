@@ -223,11 +223,9 @@ void loop() {
   turnRPower = accel - y;
   verticalPower = p;
   
-  motorWrapper(LM, enablePinM1, M1Pin1, M1Pin0);
-  motorWrapper(RM, enablePinM2, M2Pin1, M2Pin0);
-  //motorWrapper(LM, enablePin for back motor, BackM1Pin1, BackM1Pin0);
-  //motorWrapper(RM, enablePinM2 for back motor, BackM2Pin1, BackM2Pin0);
-  //delay(1000);
+  motorWrapper(turnLPower, enablePinM1, M1Pin1, M1Pin0);
+  motorWrapper(turnRPower, enablePinM2, M2Pin1, M2Pin0);
+  motorWrapper(verticalPower, enablePinM2, M2Pin1, M2Pin0);
 
 
   /* Display the floating point data */
