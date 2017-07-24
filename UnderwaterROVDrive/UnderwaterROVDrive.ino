@@ -118,7 +118,7 @@ int convertToPower(double input){
 
 int convertFlexPower(double input){
   int output = 0;
-  if (input <= 90 && input >= 10){
+  if (input <= 90 && input >= 5){
     output = map(input, 5, 90, 0, 50); // ((roll - 10) / 90); // o => [0,50]
   } else if (input > 90){
     output = 50;
@@ -206,26 +206,24 @@ void loop() {
   y = convertToPower(BX);
   p = convertToPower(BZ);
   r = convertToPower(BY);
-  int accel = convertFlexPower(angle2);
-  if (p < 0){
-    accel = -accel;
-  }
+  int accel = abs(convertFlexPower(angle2));
+//  if (p < 0){
+//    accel = -accel;
+//  }
 
   if (angle1 <= 50){
-    LM = accel + y;
-    RM = accel - y;
+    turnLPower = accel + y;
+    turnRPower = accel - y;
+    verticalPower = p;
   } else {
-    LM = 0;
-    RM = 0;
+    turnLPower = 0;
+    turnRPower = 0;
+    verticalPower = 0;
   }
-
-  turnLPower = accel + y;
-  turnRPower = accel - y;
-  verticalPower = p;
   
-  motorWrapper(turnLPower, enablePinM1, M1Pin1, M1Pin0);
-  motorWrapper(turnRPower, enablePinM2, M2Pin1, M2Pin0);
-  motorWrapper(verticalPower, enablePinM2, M2Pin1, M2Pin0);
+  motorWrapper(turnRPower, TRMpowerPin, TRMpin0, TRMpin1);
+  motorWrapper(turnLPower, TLMpowerPin, TLMpin0, TLMpin1);
+  motorWrapper(verticalPower, VMpowerPin, VMpin0, VMpin1);
 
 
   /* Display the floating point data */
@@ -242,8 +240,9 @@ void loop() {
   //Serial.print("Resistance 2: " + String(flexR2) + " ohms\t");
   Serial.print("\tBend 2: " + String(angle2));
   
-  Serial.print("\tLM: " + String(LM));
-  Serial.print("\tRM: " + String(RM));
+  Serial.print("\tTurnLPower: " + String(turnLPower));
+  Serial.print("\tTurnRPower: " + String(turnRPower));
+  Serial.print("\tVerticalPower: " + String(verticalPower));
   
   /* New line for  next sample */
   Serial.println("");
