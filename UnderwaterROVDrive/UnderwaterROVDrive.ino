@@ -2,7 +2,7 @@
  * Irene Terpstra
  * Team Handroid 
  * 7/21/17 
- * Code for omni wheel drive with BNO055 + flex sensors 
+ * Code for underwater ROV drive with BNO055 + flex sensors 
  */
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
