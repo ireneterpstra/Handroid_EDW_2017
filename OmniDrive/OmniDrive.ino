@@ -252,9 +252,10 @@ void loop() {
   //Serial.print("Resistance 2: " + String(flexR2) + " ohms\t");
   Serial.print("\tBend 2: " + String(angle2));
   
-  Serial.print("\tTurnLPower: " + String(turnLPower));
-  Serial.print("\tTurnRPower: " + String(turnRPower));
-  Serial.print("\tVerticalPower: " + String(verticalPower));
+  Serial.print("\tmotorFLPower: " + String(motorFLPower));
+  Serial.print("\tmotorBLPower: " + String(motorBLPower));
+  Serial.print("\tmotorFRPower: " + String(motorFRPower));
+  Serial.print("\tmotorBRPower: " + String(motorBRPower));
   
   /* New line for  next sample */
   Serial.println("");

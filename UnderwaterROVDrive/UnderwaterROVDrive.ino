@@ -20,20 +20,22 @@ const float BEND_RESISTANCE = 90000.0; // resistance at 90 deg
 float angle1 = 0;
 float angle2 = 0;
 
-int TRMpowerPin = 2; //PWM
-int TRMpin0 = 3;
-int TRMpin1 = 4;
-int TLMpowerPin = 5; //PWM
-int TLMpin0 = 9;
-int TLMpin1 = 10;
-int VMpowerPin = 5; //PWM
-int VMpin0 = 9;
-int VMpin1 = 10;
+int TLMpowerPin = 11; //PWM
+int TLMpin0 = 2;
+int TLMpin1 = 3;
+int TRMpowerPin = 10; //PWM
+int TRMpin0 = 4;
+int TRMpin1 = 5;
+int VMpowerPin = 9; //PWM
+int VMpin0 = 6;
+int VMpin1 = 7;
 
 double y = 0; // yaw
 double p = 0; // pitch
 double r = 0; // roll
 
+double zeroBX = 0;
+double tempBX = 0;
 double BX, BY, BZ;
 
 int turnLPower = 0;
@@ -191,17 +193,26 @@ void setup() {
 void loop() {
   sensors_event_t event;
   bno.getEvent(&event);
-
-  if(event.orientation.x <= 180){
-    BX = event.orientation.x;
-  } else {
-    BX = event.orientation.x - 360;
-  }
-  BZ = event.orientation.z;
-  BY = event.orientation.y;
   
   angle1 = calculateResistance(FLEX_PIN1);
   angle2 = calculateResistance(FLEX_PIN2);
+
+  if (angle1 > 50 && angle2 > 50){
+    zeroBX = event.orientation.x;
+  }
+  if (event.orientation.x - zeroBX > 0){
+    tempBX = event.orientation.x - zeroBX;
+  } else {
+    tempBX = 360 - (event.orientation.x - zeroBX);
+  }
+  if(event.orientation.x <= 180){
+    BX = tempBX;
+  } else {
+    BX = tempBX - 360;
+  }
+  BZ = event.orientation.z;
+  BY = event.orientation.y;
+
 
   y = convertToPower(BX);
   p = convertToPower(BZ);
@@ -220,6 +231,10 @@ void loop() {
     turnRPower = 0;
     verticalPower = 0;
   }
+
+//  Pt+1 = Pd + Pt
+//  Pd = error * k
+
   
   motorWrapper(turnRPower, TRMpowerPin, TRMpin0, TRMpin1);
   motorWrapper(turnLPower, TLMpowerPin, TLMpin0, TLMpin1);
