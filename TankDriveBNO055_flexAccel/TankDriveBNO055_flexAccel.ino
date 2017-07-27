@@ -22,16 +22,19 @@ int maxBend = 95;
 float angle1 = 0;
 float angle2 = 0;
 
-int M1Pin1 = 2;    // H-bridge leg 1 (pin 2, 1A)
-int M1Pin0 = 3;    // H-bridge leg 1 (pin 2, 1A)
-int M2Pin1 = 4;
-int M2Pin0 = 5;
+int M1Pin1 = 3;    // H-bridge leg 1 (pin 2, 1A)
+int M1Pin0 = 2;    // H-bridge leg 1 (pin 2, 1A)
+int M2Pin1 = 5;
+int M2Pin0 = 4;
 int enablePinM1 = 9;    // H-bridge enable pin
 int enablePinM2 = 10;    // H-bridge enable pin
 
 double r = 0; // roll
 double p = 0; // pitch
 double y = 0; // yaw / spin
+
+double zeroBX = 0;
+double tempBX = 0;
 
 double BX;
 double BY;
@@ -191,11 +194,26 @@ void loop(void) {
   sensors_event_t event;
   bno.getEvent(&event);
 
-  if(event.orientation.x <= 180){
-    BX = event.orientation.x;
-  } else {
-    BX = event.orientation.x - 360;
+  if (angle1 > 50 && angle2 > 50){
+    zeroBX = event.orientation.x;
   }
+  if ((event.orientation.x - zeroBX) > 0){
+    tempBX = event.orientation.x - zeroBX;
+  } else {
+    tempBX = 360 + (event.orientation.x - zeroBX);
+  }
+  
+  if(tempBX <= 180){
+    BX = tempBX;
+  } else {
+    BX = tempBX - 360;
+  }
+
+//  if(event.orientation.x <= 180){
+//    BX = event.orientation.x;
+//  } else {
+//    BX = event.orientation.x - 360;
+//  }
   BZ = event.orientation.z;
   BY = event.orientation.y;
   

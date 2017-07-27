@@ -38,6 +38,10 @@ double zeroBX = 0;
 double tempBX = 0;
 double BX, BY, BZ;
 
+int prevTLP, prevTRP, prevVP = 0;
+int trueTLP, trueTRP, trueVP;
+double K = 0.5;
+
 int turnLPower = 0;
 int turnRPower = 0;
 int verticalPower = 0;
@@ -200,12 +204,13 @@ void loop() {
   if (angle1 > 50 && angle2 > 50){
     zeroBX = event.orientation.x;
   }
-  if (event.orientation.x - zeroBX > 0){
+  if ((event.orientation.x - zeroBX) > 0){
     tempBX = event.orientation.x - zeroBX;
   } else {
-    tempBX = 360 - (event.orientation.x - zeroBX);
+    tempBX = 360 + (event.orientation.x - zeroBX);
   }
-  if(event.orientation.x <= 180){
+  
+  if(tempBX <= 180){
     BX = tempBX;
   } else {
     BX = tempBX - 360;
@@ -231,6 +236,10 @@ void loop() {
     turnRPower = 0;
     verticalPower = 0;
   }
+
+  int error = (verticalPower - prevVP) * K;
+
+  trueVP = + prevVP;
 
 //  Pt+1 = Pd + Pt
 //  Pd = error * k
