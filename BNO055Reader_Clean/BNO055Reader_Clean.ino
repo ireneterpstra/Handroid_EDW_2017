@@ -363,6 +363,7 @@ void setNewDataFile(){
  */
 void writeDataCsvLine(File file){
   String comma = F(",");
+  updateSensorData();
 
   file.print(millis());
   file.print(comma);
@@ -408,6 +409,32 @@ void writeDataCsvLine(File file){
   file.print(String(quat.z(), 4));
   
   file.println();
+}
+
+void updateSensorData(){
+  sensors_event_t event;
+  bno.getEvent(&event);
+
+  angle1 = calculateResistance(FLEX_PIN1);
+  angle2 = calculateResistance(FLEX_PIN2);
+  
+  if (angle2 > 50){
+    zeroBX = event.orientation.x;
+  }
+  if ((event.orientation.x - zeroBX) > 0){
+    tempBX = event.orientation.x - zeroBX;
+  } else {
+    tempBX = 360 + (event.orientation.x - zeroBX);
+  }
+  
+  if(tempBX <= 180){
+    BX = tempBX;
+  } else {
+    BX = tempBX - 360;
+  }
+  
+  BZ = event.orientation.z;
+  BY = event.orientation.y;
 }
 //---------------------------------------------------------------------------------------------------------
 //  Setup
@@ -459,65 +486,14 @@ void setup(void)
 void loop(void) {
 //  Serial.println(F("Loop"));
   sensors_event_t event;
-  bno.getEvent(&event);
-
+  
   angle1 = calculateResistance(FLEX_PIN1);
   angle2 = calculateResistance(FLEX_PIN2);
   
-  if (angle2 > 50){
-    zeroBX = event.orientation.x;
-  }
-  if ((event.orientation.x - zeroBX) > 0){
-    tempBX = event.orientation.x - zeroBX;
-  } else {
-    tempBX = 360 + (event.orientation.x - zeroBX);
-  }
-  
-  if(tempBX <= 180){
-    BX = tempBX;
-  } else {
-    BX = tempBX - 360;
-  }
-  
-  BZ = event.orientation.z;
-  BY = event.orientation.y;
-
-//  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
-//  delay(1000);                       // wait for a second
-//  digitalWrite(LED_BUILTIN, LOW);    // turn the LED off by making the voltage LOW
   t.update();
-
-   //sample();
 
   if (angle1 > 50 && !sampling){
     startRecording();
   } 
-  
-//  else if (angle1 > 50 && sampling){
-//    
-//  } else if (recording){
-//    
-//  }
-
-//  if (angle1 > 50 && !recording){
-//    recording = true;
-//    //create new file
-//    setNewDataFile();
-//  } else if (angle1 > 50 && recording){
-//    //add lines to file
-//    if (dataFile){
-//      writeDataCsvLine(dataFile);
-//      Serial.print(F("."));
-//    }
-//  } else if (recording){
-//    recording = false;
-//    //end recording
-//    Serial.println();
-//    closeDataFile(dataFile);
-//    //dataFile = null;
-//  }
-  
-  /* Wait the specified delay before requesting nex data */
-  //delay(BNO055_SAMPLERATE_DELAY_MS);
 }
 
