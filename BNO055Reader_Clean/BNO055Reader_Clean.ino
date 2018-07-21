@@ -67,7 +67,7 @@ int fileCount = 0;
 
 int BNO055_SAMPLERATE_DELAY_MS = 100;
 
-Adafruit_BNO055 bno = Adafruit_BNO055(55);
+Adafruit_BNO055 bno = Adafruit_BNO055(56, (0x71));
 
 /**************************************************************************/
 /*
