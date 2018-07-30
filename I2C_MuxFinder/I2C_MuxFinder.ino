@@ -10,13 +10,13 @@ extern "C" {
 #include "utility/twi.h"  // from Wire library, so we can do bus scanning
 }
 
-#define TCAADDR 0x70
+#define I2CADDR 0x70
 
-void tcaselect(uint8_t i) {
+void i2cselect(uint8_t i) {
   if (i > 3) return;
 
 
-  Wire.beginTransmission(TCAADDR);
+  Wire.beginTransmission(I2CADDR);
   Wire.write(1 << i);
   Wire.endTransmission();  
 }
@@ -31,14 +31,14 @@ void setup()
     Wire.begin();
     
     Serial.begin(115200);
-    Serial.println("\nTCAScanner ready!");
+    Serial.println("\nI2CScanner ready!");
     
     for (uint8_t t=0; t<4; t++) {
-      tcaselect(t);
-      Serial.print("TCA Port #"); Serial.println(t);
+      i2cselect(t);
+      Serial.print("I2C Port #"); Serial.println(t);
 
       for (uint8_t addr = 0; addr<=127; addr++) {
-        if (addr == TCAADDR) continue;
+        if (addr == I2CADDR) continue;
       
         uint8_t data;
         if (! twi_writeTo(addr, &data, 0, 1, 1)) {
